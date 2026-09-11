@@ -586,9 +586,7 @@ registerDoParallel(cl)
 # Define the control
 set.seed(1234)
 trControl <- trainControl(method = "cv", number = 10, search = "grid")
-# When performing cross-validation, we tend to go with the common 10 folds (k=10). 
-# A higher k (number of folds) means that each model is trained on a larger training set and tested on a smaller test fold. In theory, this should lead to a lower prediction error as the models see more of the available data.
-#A lower k means that the model is trained on a smaller training set and tested on a larger test fold. Here, the potential for the data distribution in the test fold to differ from the training set is bigger, and we should thus expect a higher prediction error on average.
+
 set.seed(1234)
 rf_default <- train(hospitalisation_RFA ~ SEX + age_group + race_group + hospitalisation_prisma + log_subpopulation_size, 
                     data = Final_training_data, 
@@ -605,8 +603,7 @@ rf_mtry <- train(hospitalisation_RFA ~ SEX + age_group + race_group + hospitalis
                  data = Final_training_data, method = "rf", tuneGrid = tuneGrid, trControl = trControl, 
                  ntree = 300)
 print(rf_mtry)
-# mtry is how many variables will be included in the first split.
-# mtry depends on the number of columns and the model mode. The default in randomForest::randomForest() is floor(sqrt(ncol(x))) for classification and floor(ncol(x)/3) for regression.
+
 
 #storing the best mtry value
 best_mtry <- rf_mtry$bestTune$mtry
@@ -651,8 +648,6 @@ rf_mtry <- train(hospitalisation_RFA ~ hospitalisation_prisma
 
 
 print(rf_mtry)
-# mtry is how many variables will be included in the first split.
-# mtry depends on the number of columns and the model mode. The default in randomForest::randomForest() is floor(sqrt(ncol(x))) for classification and floor(ncol(x)/3) for regression.
 
 #storing the best mtry value
 best_mtry <- rf_mtry$bestTune$mtry
@@ -692,8 +687,6 @@ Final_test_data$predicted_hospitalisation6 <- predictions_counts6
 Final_test_data$predicted_hospitalisation7 <- predictions_counts7
 
 
-##Final_test_data---------
-#write.xlsx(Final_test_data, "/Users/tanvirahammed/Library/CloudStorage/Box-Box/BoxSecure-DPHS-Opiod/COVID registry/Tanvir/Results/Final_test_data_ZIP_June.xlsx", rowNames = FALSE)
 
 
 # Group by ZIP and calculate the total hospitalizations for observed and predicted values
@@ -709,11 +702,6 @@ total_hospitalizations <- Final_test_data %>%
       total_predicted_hospitalizations6 = sum(predicted_hospitalisation6, na.rm = TRUE),
       total_predicted_hospitalizations7 = sum(predicted_hospitalisation7, na.rm = TRUE)
    )
-
-
-#write.xlsx(total_hospitalizations, "/Users/tanvirahammed/Library/CloudStorage/Box-Box/BoxPHI-PHMR Projects/Tanvir/Data/Final Data/total_hospitalizations_ZIP_June.xlsx", rowNames = FALSE)
-
-
 
 
 
@@ -733,28 +721,12 @@ for (i in seq_along(predicted_variables)) {
 }
 
 A_i_columns <- paste0("A_i_", 1:7)
-# Subset the data frame to include only the A_i columns
 A_i_data <- total_hospitalizations[A_i_columns]
-# Use the summary function to get the five-number summary for each A_i column
 (summary_A_i <- apply(A_i_data, 2, summary))
 
 
 
-# 
-# #MAPE-------------
-# # Loop through each predicted variable to compute MAPE
-# for (i in seq_along(predicted_variables)) {
-#    col_name <- paste0("MAPE_", i)
-#    total_hospitalizations[[col_name]] <- with(total_hospitalizations, 
-#                                               abs(get(predicted_variables[i]) - total_observed_hospitalizations) / total_observed_hospitalizations)
-# }
-# 
-# # Extract only the MAPE columns
-# MAPE_columns <- paste0("MAPE_", 1:7)
-# MAPE_data <- total_hospitalizations[MAPE_columns]
-# 
-# # Compute the mean MAPE for each prediction column
-# (mean_MAPE <- apply(MAPE_data, 2, mean, na.rm = TRUE))
+
 
 
 stopCluster(cl)
@@ -822,85 +794,6 @@ p <- ggplot(data_long, aes(x = factor(ZIP, levels = data_sorted$ZIP),
 
 # Print the plot
 print(p)
-
-# # Add extra text annotations
-# p + annotate("text", x = 71, y = 3450, label = "For training: Dec 1, 2020 - Feb 28, 2021", size = 6.5, color = "black") +
-#   annotate("text", x = 71, y = 3250, label = "For testing: Aug 1, 2021 - Nov 30, 2021", size = 6.5, color = "black")
-# 
-# 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# Plotting observed hospitalizations
-plot(total_hospitalizations$ZIP, total_hospitalizations$total_observed_hospitalizations,
-     type = "l", col = "blue", lwd = 1,
-     xlab = "ZIP Code", ylab = "COVID-19 Hospitalisations",
-     main = "Comparison of Observed and Predicted COVID-19 Hospitalisations by ZIP Code")
-
-# Adding lines for predicted hospitalizations
-lines(total_hospitalizations$ZIP, total_hospitalizations$total_predicted_hospitalizations7, col = "red")
-
-# Adding legend
-legend("topright", legend = c("Observed", "Predicted"),
-       col = c("blue", "red"), lty = 1, lwd = 1, bty = "n", x.intersp = 0.09, y.intersp = 0.2)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
